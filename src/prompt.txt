@@ -1,0 +1,38 @@
+
+
+The above maps are for part of an 8-bit isa. Your job is to write an assembler for this isa. The Assembler must have the following features:
+
+1. The coding conventions to be followed are snake_case for variables and functions and Pascal case for class and structs.
+
+2. Make sure that the code is very modular and should be easily extensible so future support for more instructions and registers may be added.
+
+3. Support for single line comments starting with `#` and multiline comments starting and ending with `/*` and `*/` respectively.
+
+4. Support for labelling lines of code and then addressing those case insensitive labels later in the code. 
+The labels should be able to be used in the form of `.label`.
+
+5. Support for multiple ways of representing immediates like 0x, 0b, and normal base-10.
+
+6. It should have good error handling and print exactly at what line and column in an input the error occured and what the error is and also color the error message for better readability.
+
+7. The assembler should output the hex codes of each line in the format line_number: space separated hex codes.
+
+A sample assembly file for this ISA looks as follows:
+
+```
+/* 
+Test file for assembler 
+*/
+
+.label:
+    MOVI R0, 42 # This is a comment hello
+    MOVI R1, 42
+    ADD R0, R1
+
+.loop:
+    # This is a comment
+    ADD R0, R1
+    CMP R0, R1
+    JMP .loop
+    HALT
+```
