@@ -1,5 +1,5 @@
-#ifndef ISA_HPP
-#define ISA_HPP
+#pragma once
+
 #include <string>
 #include <map>
 
@@ -13,7 +13,7 @@ enum Register
     R3 = 0b11
 };
 
-map<string, Register> registers = {
+inline map<string, Register> registers = {
     {"R0", R0},
     {"R1", R1},
     {"R2", R2},
@@ -52,7 +52,7 @@ struct OpInfo
     InstructionFormat format;
 };
 
-map<string, OpInfo> instruction_set = {
+inline map<string, OpInfo> instruction_set = {
     {"ADD", {ADD, R}},
     {"SUB", {SUB, R}},
     {"MUL", {MUL, R}},
@@ -82,7 +82,7 @@ public:
         this->info = instruction_set[op];
     }
 
-    byte value()
+    inline byte get_byte_code()
     {
         byte opcode = byte(info.op);
         InstructionFormat format = info.format;
@@ -105,5 +105,3 @@ public:
         }
     }
 };
-
-#endif // ISA_HPP
