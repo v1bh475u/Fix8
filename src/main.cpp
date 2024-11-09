@@ -9,6 +9,14 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+// ANSI color codes
+const string RESET = "\033[0m";
+const string RED = "\033[31m";
+const string GREEN = "\033[32m";
+const string YELLOW = "\033[33m";
+const string BLUE = "\033[34m";
+const string CYAN = "\033[36m";
+
 int assemble_file(string file_name, string output_file_name)
 {
     Assembler assembler;
@@ -19,6 +27,7 @@ int assemble_file(string file_name, string output_file_name)
     }
     catch (const exception &e)
     {
+        cerr << RED << "Assembly Error: " << e.what() << RESET << endl;
         return 1;
     }
 
@@ -26,20 +35,29 @@ int assemble_file(string file_name, string output_file_name)
 
     if (!output_file)
     {
-        cerr << "Error: Could not open the file for writing." << endl;
+        cerr << RED << "Error: Could not open the file for writing." << RESET << endl;
         return 1;
     }
 
     output_file.write(reinterpret_cast<const char *>(machine_code.data()), machine_code.size());
     output_file.close();
+    cout << GREEN << "Assembly successful! Output file: " << output_file_name << RESET << endl;
     return 0;
 }
 
 int emulate_file(string file_name)
 {
     Emulator emulator;
-    emulator.load_program(file_name);
-    emulator.run();
+    try
+    {
+        emulator.load_program(file_name);
+        emulator.run();
+    }
+    catch (const exception &e)
+    {
+        cerr << RED << "Emulation Error: " << e.what() << RESET << endl;
+        return 1;
+    }
     return 0;
 }
 
@@ -48,11 +66,13 @@ int main()
     int choice;
     while (true)
     {
-        cout << "Menu:\n";
-        cout << "1. Assemble a program\n";
-        cout << "2. Emulate a program\n";
-        cout << "3. Exit\n";
-        cout << "Enter your choice: ";
+        cout << CYAN << "\n========== Menu ==========\n\n"
+             << RESET;
+        cout << YELLOW << "1. Assemble a program" << RESET << endl;
+        cout << YELLOW << "2. Emulate a program" << RESET << endl;
+        cout << YELLOW << "3. Exit\n"
+             << RESET << endl;
+        cout << BLUE << "Enter your choice: " << RESET;
         cin >> choice;
 
         if (choice == 1)
@@ -70,24 +90,26 @@ int main()
 
             if (asm_files.empty())
             {
-                cout << "No assembly files found in the directory." << endl;
-                return 1;
+                cout << RED << "No assembly files found in the directory." << RESET << endl;
+                continue;
             }
 
-            cout << "Select a file to assemble:" << endl;
+            cout << GREEN << "Select a file to assemble:\n"
+                 << RESET << endl;
             for (size_t i = 0; i < asm_files.size(); ++i)
             {
-                cout << i + 1 << ". " << asm_files[i] << endl;
+                cout << GREEN << i + 1 << ". " << asm_files[i] << RESET << endl;
             }
 
             int file_choice;
-            cout << "Enter your choice: ";
+            cout << endl;
+            cout << BLUE << "Enter your choice: " << RESET;
             cin >> file_choice;
 
-            if (file_choice < 1 || file_choice > asm_files.size())
+            if (file_choice < 1 || file_choice > static_cast<int>(asm_files.size()))
             {
-                cout << "Invalid choice." << endl;
-                return 1;
+                cout << RED << "Invalid choice." << RESET << endl;
+                continue;
             }
 
             string selected_file = asm_files[file_choice - 1];
@@ -98,50 +120,47 @@ int main()
         }
         else if (choice == 2)
         {
-            string asm_directory = "../programs";
-            vector<string> asm_files;
+            string bin_directory = "../programs";
+            vector<string> bin_files;
 
-            for (const auto &entry : fs::directory_iterator(asm_directory))
+            for (const auto &entry : fs::directory_iterator(bin_directory))
             {
                 if (entry.is_regular_file() && entry.path().extension() == ".bin")
-                {
-                    asm_files.push_back(entry.path().string());
-                }
+                    bin_files.push_back(entry.path().string());
             }
 
-            if (asm_files.empty())
+            if (bin_files.empty())
             {
-                cout << "No assembly files found in the directory." << endl;
-                return 1;
+                cout << RED << "No binary files found in the directory." << RESET << endl;
+                continue;
             }
 
-            cout << "Select a file to emulate:" << endl;
-            for (size_t i = 0; i < asm_files.size(); ++i)
-            {
-                cout << i + 1 << ". " << asm_files[i] << endl;
-            }
+            cout << GREEN << "Select a file to emulate:" << RESET << endl;
+            for (size_t i = 0; i < bin_files.size(); ++i)
+                cout << GREEN << i + 1 << ". " << bin_files[i] << RESET << endl;
 
+            cout << endl;
             int file_choice;
-            cout << "Enter your choice: ";
+            cout << BLUE << "Enter your choice: " << RESET;
             cin >> file_choice;
 
-            if (file_choice < 1 || file_choice > asm_files.size())
+            if (file_choice < 1 || file_choice > static_cast<int>(bin_files.size()))
             {
-                cout << "Invalid choice." << endl;
-                return 1;
+                cout << RED << "Invalid choice." << RESET << endl;
+                continue;
             }
 
-            string selected_file = asm_files[file_choice - 1];
+            string selected_file = bin_files[file_choice - 1];
             emulate_file(selected_file);
         }
         else if (choice == 3)
         {
-            cout << "Exiting..." << endl;
+            cout << CYAN << "Exiting..." << RESET << endl;
             break;
         }
         else
         {
-            cout << "Invalid choice." << endl;
+            cout << RED << "Invalid choice." << RESET << endl;
         }
     }
 }
