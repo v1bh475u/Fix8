@@ -4,6 +4,7 @@
 #include <vector>
 #include <optional>
 #include <bitset>
+#include <cstdint>
 #include "assembler.hpp"
 
 using namespace std;
@@ -18,7 +19,7 @@ Assembler::~Assembler()
 {
 }
 
-vector<byte> Assembler::assemble(string filename)
+vector<uint8_t> Assembler::assemble(string filename)
 {
     this->filename = filename;
     ifstream file(filename);
@@ -37,7 +38,7 @@ vector<byte> Assembler::assemble(string filename)
         this->current_line = lines[line_num];
         this->column_num = 0;
 
-        optional<byte> instruction = parse_line(current_line);
+        optional<uint8_t> instruction = parse_line(current_line);
         if (instruction.has_value())
         {
             machine_code.push_back(instruction.value());
@@ -48,12 +49,12 @@ vector<byte> Assembler::assemble(string filename)
     return machine_code;
 }
 
-optional<byte> Assembler::parse_line(string line)
+optional<uint8_t> Assembler::parse_line(string line)
 {
     vector<string> tokens;
     stringstream ss(line);
     string token;
-    byte code = byte(0x00);
+    uint8_t code = uint8_t(0x00);
 
     while (ss >> token)
     {
@@ -124,9 +125,9 @@ void Assembler::parse_operands_rtype(Instruction &instruction, vector<string> &t
         return;
     }
 
-    optional<byte> rd = parse_register(tokens[0]);
+    optional<uint8_t> rd = parse_register(tokens[0]);
     this->column_num += tokens[0].size() + 1;
-    optional<byte> rs = parse_register(tokens[1]);
+    optional<uint8_t> rs = parse_register(tokens[1]);
     this->column_num += tokens[1].size() + 1;
 
     if (rd.has_value() && rs.has_value())
@@ -144,7 +145,7 @@ void Assembler::parse_operands_itype(Instruction &instruction, vector<string> &t
         return;
     }
 
-    optional<byte> imm = parse_immediate(tokens[0]);
+    optional<uint8_t> imm = parse_immediate(tokens[0]);
     if (imm.has_value())
     {
         instruction.imm = imm.value();
@@ -162,13 +163,13 @@ void Assembler::parse_operands_ntype(Instruction &instruction, vector<string> &t
     }
 }
 
-optional<byte> Assembler::parse_register(string reg)
+optional<uint8_t> Assembler::parse_register(string reg)
 {
     if (reg.back() == ',')
         reg.pop_back();
 
     if (registers.find(reg) != registers.end())
-        return byte(registers[reg]);
+        return uint8_t(registers[reg]);
 
     else
     {
@@ -178,7 +179,7 @@ optional<byte> Assembler::parse_register(string reg)
     return nullopt;
 }
 
-optional<byte> Assembler::parse_immediate(string imm)
+optional<uint8_t> Assembler::parse_immediate(string imm)
 {
     if (imm[0] == '$')
         imm = imm.substr(1);
@@ -188,7 +189,7 @@ optional<byte> Assembler::parse_immediate(string imm)
 
     try
     {
-        return byte(stoi(imm, nullptr, 16));
+        return uint8_t(stoi(imm, nullptr, 16));
     }
     catch (...)
     {

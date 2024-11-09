@@ -2,7 +2,7 @@
 
 #include <string>
 #include <map>
-
+#include <cstdint>
 using namespace std;
 
 enum Register
@@ -74,20 +74,27 @@ class Instruction
 {
 public:
     OpInfo info;
-    byte imm;
-    byte reg[2];
+    uint8_t imm;
+    uint8_t reg[2];
 
     Instruction(string op)
     {
         this->info = instruction_set[op];
     }
+    Instruction(uint8_t opcode, uint8_t imm, uint8_t *reg)
 
-    inline byte get_byte_code()
     {
-        byte opcode = byte(info.op);
+        this->info.op = static_cast<Operation>(opcode);
+        this->imm = imm;
+        this->reg[0] = reg[0];
+        this->reg[1] = reg[1];
+    }
+    inline uint8_t get_byte_code()
+    {
+        uint8_t opcode = uint8_t(info.op);
         InstructionFormat format = info.format;
 
-        byte code = byte(opcode << 4);
+        uint8_t code = uint8_t(opcode << 4);
         if (format == N)
         {
             return code;
