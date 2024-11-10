@@ -2,17 +2,10 @@
 #include <fstream>
 #include <vector>
 #include "emulator.hpp"
+#include "colors.hpp"
+#include <limits>
 
 using namespace std;
-
-// ANSI color codes
-const char *RESET = "\033[0m";
-const char *RED = "\033[31m";
-const char *GREEN = "\033[32m";
-const char *YELLOW = "\033[33m";
-const char *BLUE = "\033[34m";
-const char *CYAN = "\033[36m";
-const char *MAGENTA = "\033[35m";
 
 Instruction Emulator::decode(uint8_t file_byte)
 {
@@ -27,36 +20,45 @@ Instruction Emulator::decode(uint8_t file_byte)
     }
     else
     {
-        reg[1] = file_byte & 3;
-        reg[0] = (file_byte >> 2) & 3;
+        reg[1] = file_byte & 0b11;
+        reg[0] = (file_byte >> 2) & 0b11;
     }
     Instruction instr = Instruction(opcode, imm, reg);
     return instr;
 }
 
-void Emulator::run()
+void Emulator::run_program(string filename)
 {
-    ifstream file(this->filename, ios::binary);
+    this->filename = filename;
+
+    ifstream file(filename, ios::binary);
     if (!file)
     {
         cerr << RED << "Error opening file: " << this->filename << RESET << endl;
         return;
     }
-    vector<char> bytecode((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    this->bytecode = vector<int8_t>((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
     this->pc = 0;
     this->flags = 0;
     while (true)
     {
-        uint8_t byte = bytecode[this->pc];
+        uint8_t byte = this->bytecode[this->pc];
         Instruction instr = decode(byte);
+        this->print_regs({0, 1, 2, 3});
+        this->print_instr(instr);
         execute(instr);
-        if (flags & 0b1000)
+        if (this->flags & 0b1000)
         {
             break;
         }
-        else if (flags & 0b0100)
+        else if (this->flags & 0b0100)
         {
             debug_print("%sException occurred. Exiting...%s\n", RED, RESET);
+            break;
+        }
+        if (this->pc >= this->bytecode.size())
+        {
+            debug_print("%sEnd of program reached.%s\n", GREEN, RESET);
             break;
         }
     }
@@ -67,154 +69,119 @@ uint8_t Emulator::execute(Instruction instr)
 {
     uint16_t imm;
     uint8_t q, r;
+    int16_t offset;
+    offset = (reg[instr.reg[0]] << 4) | reg[instr.reg[1]];
     switch (instr.info.op)
     {
     case ADD:
-        debug_print("%s[%X] ADD R%d, R%d%s\n", CYAN, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         reg[instr.reg[0]] += reg[instr.reg[1]];
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         this->pc++;
         break;
     case SUB:
-        debug_print("%s[%X] SUB R%d, R%d%s\n", CYAN, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         reg[instr.reg[0]] -= reg[instr.reg[1]];
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         this->pc++;
         break;
     case MUL:
-        debug_print("%s[%X] MUL R%d, R%d%s\n", CYAN, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         imm = (uint16_t)reg[instr.reg[0]] * (uint16_t)reg[instr.reg[1]];
         reg[0] = imm & 0xF;
         reg[1] = imm >> 4;
-        debug_print("R0 -> 0x%X, R1 -> 0x%X\n", reg[0], reg[1]);
         this->pc++;
         break;
     case DIV:
-        debug_print("%s[%X] DIV R%d, R%d%s\n", CYAN, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         q = reg[instr.reg[0]] / reg[instr.reg[1]];
         r = reg[instr.reg[0]] % reg[instr.reg[1]];
         reg[0] = q;
         reg[1] = r;
-        debug_print("R0 -> 0x%X, R1 -> 0x%X\n", reg[0], reg[1]);
         this->pc++;
         break;
     case NAND:
-        debug_print("%s[%X] NAND R%d, R%d%s\n", CYAN, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         reg[instr.reg[0]] = ~(reg[instr.reg[0]] & reg[instr.reg[1]]);
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         this->pc++;
         break;
     case CMP:
-        debug_print("%s[%X] CMP R%d, R%d%s\n", MAGENTA, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         if (reg[instr.reg[0]] == reg[instr.reg[1]])
         {
-            flags = 0b0001;
+            this->flags = 0b0001;
         }
         else if (reg[instr.reg[0]] > reg[instr.reg[1]])
         {
-            flags = 0b0010;
+            this->flags = 0b0010;
         }
         this->pc++;
-        debug_print("Flags -> 0x%X\n", flags);
+        this->print_flags();
         break;
     case JMP:
-        debug_print("%s[%X] JMP 0x%X%s\n", YELLOW, this->pc, instr.imm, RESET);
         this->pc++;
-        this->pc += instr.imm;
-        debug_print("this->pc -> 0x%X\n", this->pc);
+        this->pc += offset;
+        this->print_pc();
         break;
     case JE:
-        debug_print("%s[%X] JE 0x%X%s\n", YELLOW, this->pc, instr.imm, RESET);
         this->pc++;
-        if (flags & 0b0001)
+        if (this->flags & 0b0001)
         {
-            this->pc += instr.imm;
+            this->pc += offset;
         }
-        debug_print("this->pc -> 0x%X\n", this->pc);
+        this->print_pc();
         break;
+
     case JGT:
-        debug_print("%s[%X] JGT 0x%X%s\n", YELLOW, this->pc, instr.imm, RESET);
         this->pc++;
-        if (flags & 0b0010)
+        if (this->flags & 0b0010)
         {
-            this->pc += instr.imm;
+            this->pc += offset;
         }
-        debug_print("this->pc -> 0x%X\n", this->pc);
+        this->print_pc();
         break;
 
     case LD:
-        debug_print("%s[%X] LD R%d, R%d%s\n", BLUE, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         reg[instr.reg[0]] = memory[reg[instr.reg[1]]];
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         this->pc++;
         break;
 
     case ST:
-        debug_print("%s[%X] ST R%d, R%d%s\n", BLUE, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         memory[reg[instr.reg[0]]] = reg[instr.reg[1]];
-        debug_print("Memory[0x%X] -> 0x%X\n", reg[instr.reg[0]], memory[reg[instr.reg[0]]]);
+        this->print_memory({reg[instr.reg[0]]});
         this->pc++;
         break;
     case MOV:
-        debug_print("%s[%X] MOV R%d, R%d%s\n", GREEN, this->pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
         reg[instr.reg[0]] = reg[instr.reg[1]];
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         this->pc++;
         break;
     case MOVL:
-        debug_print("%s[%X] MOVL $0x%X%s\n", GREEN, this->pc, instr.imm, RESET);
         reg[0] = instr.imm;
-        debug_print("R0 -> 0x%X\n", reg[instr.reg[0]]);
         this->pc++;
         break;
     case MOVH:
-        debug_print("%s[%X] MOVH $0x%X%s\n", GREEN, this->pc, instr.imm, RESET);
         reg[0] = instr.imm << 4;
-        debug_print("R0 -> 0x%X\n", reg[instr.reg[0]]);
         this->pc++;
         break;
     case SYSCALL:
-        debug_print("%s[%X] SYSCALL%s\n", RED, this->pc, RESET);
         switch (reg[0])
         {
         case 0x0:
-
             for (int i = 0; i < reg[3]; i++)
-            {
-                cout << memory[reg[2] + i];
-            }
+                cout << static_cast<char>(memory[reg[2] + i]);
+            cout << endl;
             break;
         case 0x1:
-
+            cin.clear();
+            cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
             for (int i = 0; i < reg[3]; i++)
-            {
-                cin >> memory[reg[2] + i];
-            }
+                memory[reg[2] + i] = cin.get();
             break;
         default:
-            debug_print("%sInvalid syscall%s\n", RED, RESET);
-            flags = 0b0100;
+            debug_print("%sInvalid syscall!%s\n", RED, RESET);
+            this->flags = 0b0100;
         }
-
         this->pc++;
         break;
     case HLT:
-        debug_print("%s[%X] HLT%s\n", RED, this->pc, RESET);
-        flags = 0b1000;
+        this->flags = 0b1000;
         this->pc++;
         break;
     default:
-        debug_print("%sInvalid instruction%s\n", RED, RESET);
-        flags = 0b0100;
+        debug_print("%sInvalid instruction!%s\n", RED, RESET);
+        this->flags = 0b0100;
     }
     return 0;
 }
