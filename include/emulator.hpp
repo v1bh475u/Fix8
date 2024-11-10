@@ -5,7 +5,7 @@
 using namespace std;
 
 #define debug_print(...) printf(__VA_ARGS__)
-
+#define src_reg_print() debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
 class Emulator
 {
 public:
