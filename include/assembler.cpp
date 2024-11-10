@@ -30,9 +30,7 @@ vector<uint8_t> Assembler::assemble(string filename)
     vector<string> lines;
     string line;
     while (getline(file, line))
-    {
         lines.push_back(line);
-    }
 
     for (line_num = 0; line_num < (int)lines.size(); line_num++)
     {
@@ -198,7 +196,7 @@ optional<uint8_t> Assembler::parse_immediate(string imm)
 
 void Assembler::handle_error(string message)
 {
-    cout << RED << this->filename << " : Error at " << line_num << ":" << column_num << RESET << endl;
+    cout << RED << this->filename << " : Error at " << line_num + 1 << ":" << column_num << RESET << endl;
     cout << RED << current_line << RESET << endl;
     cout << RED << message << RESET << endl;
     throw runtime_error("Assembler error!");
