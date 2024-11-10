@@ -13,7 +13,7 @@ ADD R3, R0
 MOVL $0
 LD R1, R0
 CMP R3, R1
-MOVL $7
+MOVL $6
 MOV R1, R0
 MOVL $0
 JGT R0, R1 ; break the loop if loop variable > a

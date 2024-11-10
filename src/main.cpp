@@ -43,8 +43,7 @@ int emulate_file(string file_name)
     Emulator emulator;
     try
     {
-        emulator.load_program(file_name);
-        emulator.run();
+        emulator.run_program(file_name);
     }
     catch (const exception &e)
     {
@@ -76,9 +75,7 @@ int main()
             for (const auto &entry : fs::directory_iterator(asm_directory))
             {
                 if (entry.is_regular_file() && entry.path().extension() == ".asm")
-                {
                     asm_files.push_back(entry.path().string());
-                }
             }
 
             if (asm_files.empty())
@@ -90,9 +87,7 @@ int main()
             cout << GREEN << "Select a file to assemble:\n"
                  << RESET << endl;
             for (size_t i = 0; i < asm_files.size(); ++i)
-            {
                 cout << GREEN << i + 1 << ". " << asm_files[i] << RESET << endl;
-            }
 
             int file_choice;
             cout << endl;
@@ -131,8 +126,8 @@ int main()
             cout << GREEN << "Select a file to emulate:" << RESET << endl;
             for (size_t i = 0; i < bin_files.size(); ++i)
                 cout << GREEN << i + 1 << ". " << bin_files[i] << RESET << endl;
-
             cout << endl;
+
             int file_choice;
             cout << BLUE << "Enter your choice: " << RESET;
             cin >> file_choice;
