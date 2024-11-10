@@ -20,7 +20,6 @@ int assemble_file(string file_name, string output_file_name)
     }
     catch (const exception &e)
     {
-        cerr << RED << "Assembly Error: " << e.what() << RESET << endl;
         return 1;
     }
 

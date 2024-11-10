@@ -1,7 +1,7 @@
-#ifndef EMULATOR_HPP
+#pragma once
+
 #include <iostream>
 #include <cstdint>
-
 #include "colors.hpp"
 #include "isa.hpp"
 
@@ -30,19 +30,20 @@ public:
     }
     void print_instr(Instruction instruction)
     {
-        cout << YELLOW << "[" << to_string(this->pc) << "] " << instruction.get_string() << RESET << endl;
+        string color = instruction_colors[instruction.info.op];
+        cout << color << "[" << to_string(this->pc) << "] " << instruction.get_string() << RESET << endl;
     }
     void print_pc()
     {
-        debug_print("PC -> %d\n", pc);
+        debug_print("%sPC -> %d%s\n", RED, pc, RESET);
     }
     void print_flags()
     {
-        debug_print("Flags -> %d\n", flags);
+        debug_print("%sFlags -> %d%s\n", RED, flags, RESET);
     }
     void print_memory(int mem_addr)
     {
-        debug_print("Memory[0x%X] -> 0x%X\n", mem_addr, memory[mem_addr]);
+        debug_print("%sMemory[0x%X] -> 0x%X%s\n", RED, mem_addr, memory[mem_addr], RESET);
     }
 
     void run_program(string filename);
@@ -57,4 +58,3 @@ private:
     uint8_t flags;
     uint8_t pc;
 };
-#endif
