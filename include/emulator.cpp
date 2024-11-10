@@ -19,8 +19,9 @@ Instruction Emulator::decode(uint8_t file_byte)
     uint8_t opcode = (file_byte >> 4) & 0xF;
     uint8_t imm;
     uint8_t reg[2];
-
-    if (opcode == MOVI)
+    uint8_t mask = 0b11;
+    uint8_t opmask = ~((opcode >> 1) ^ mask);
+    if (opmask)
     {
         imm = file_byte & 0xF;
     }
@@ -92,20 +93,6 @@ uint8_t Emulator::execute(Instruction instr)
         reg[0] = q;
         reg[1] = r;
         debug_print("R0 -> 0x%X, R1 -> 0x%X\n", reg[0], reg[1]);
-        pc++;
-        break;
-    case SHR:
-        debug_print("%s[%X] SHR R%d, R%d%s\n", CYAN, pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
-        reg[instr.reg[0]] >>= reg[instr.reg[1]];
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
-        pc++;
-        break;
-    case SHL:
-        debug_print("%s[%X] SHL R%d, R%d%s\n", CYAN, pc, instr.reg[0], instr.reg[1], RESET);
-        debug_print("R%d -> 0x%X, R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]], instr.reg[1], reg[instr.reg[1]]);
-        reg[instr.reg[0]] <<= reg[instr.reg[1]];
-        debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         pc++;
         break;
     case NAND:
@@ -181,10 +168,20 @@ uint8_t Emulator::execute(Instruction instr)
         debug_print("R%d -> 0x%X\n", instr.reg[0], reg[instr.reg[0]]);
         pc++;
         break;
-    case MOVI:
+    case MOVL:
         debug_print("%s[%X] MOVI $0x%X%s\n", GREEN, pc, instr.imm, RESET);
         reg[0] = instr.imm;
         debug_print("R0 -> 0x%X\n", reg[instr.reg[0]]);
+        pc++;
+        break;
+    case MOVH:
+        debug_print("%s[%X] MOVI $0x%X%s\n", GREEN, pc, instr.imm, RESET);
+        reg[0] = instr.imm << 4;
+        debug_print("R0 -> 0x%X\n", reg[instr.reg[0]]);
+        pc++;
+        break;
+    case SYSCALL:
+        debug_print("%s[%X] SYSCALL%s\n", RED, pc, RESET);
         pc++;
         break;
     case HLT:
