@@ -6,6 +6,7 @@
 #include <bitset>
 #include <cstdint>
 #include "assembler.hpp"
+#include "colors.hpp"
 
 using namespace std;
 
@@ -40,10 +41,7 @@ vector<uint8_t> Assembler::assemble(string filename)
 
         optional<uint8_t> instruction = parse_line(current_line);
         if (instruction.has_value())
-        {
             machine_code.push_back(instruction.value());
-            cout << current_line << " : " << bitset<8>(int(instruction.value())) << endl;
-        }
     }
 
     return machine_code;
@@ -200,8 +198,8 @@ optional<uint8_t> Assembler::parse_immediate(string imm)
 
 void Assembler::handle_error(string message)
 {
-    cout << "\033[1;31m" << this->filename << " : Error at " << line_num << ":" << column_num << "\033[0m" << endl;
-    cout << "\033[1;33m" << current_line << "\033[0m" << endl;
-    cout << "\033[1;31m" << message << "\033[0m" << endl;
+    cout << RED << this->filename << " : Error at " << line_num << ":" << column_num << RESET << endl;
+    cout << RED << current_line << RESET << endl;
+    cout << RED << message << RESET << endl;
     throw runtime_error("Assembler error!");
 }
