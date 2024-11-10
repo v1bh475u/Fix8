@@ -85,6 +85,16 @@ public:
 
     {
         this->info.op = static_cast<Operation>(opcode);
+
+        for (auto &i : instruction_set)
+        {
+            if (i.second.op == info.op)
+            {
+                this->info.format = i.second.format;
+                break;
+            }
+        }
+
         this->imm = imm;
         this->reg[0] = reg[0];
         this->reg[1] = reg[1];
@@ -110,5 +120,30 @@ public:
             code |= reg[1] << 0;
             return code;
         }
+    }
+
+    inline string get_string()
+    {
+        string op = "";
+        for (auto &i : instruction_set)
+        {
+            if (i.second.op == info.op)
+            {
+                op = i.first;
+                break;
+            }
+        }
+
+        string str = op + " ";
+        if (info.format == I)
+        {
+            str += to_string(imm);
+        }
+        else if (info.format == R)
+        {
+            str += "R" + to_string(reg[0]) + ", R" + to_string(reg[1]);
+        }
+
+        return str;
     }
 };
