@@ -1,4 +1,4 @@
-;This test checks for utility of if..else statements
+; This test checks for utility of if..else statements
 MOVL $1
 MOV R1, R0
 MOVL $0
