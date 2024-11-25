@@ -14,7 +14,7 @@ Fix8 is a simple 8-bit Instruction Set Architecture (ISA) implementation, featur
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/DarkPhoenix42/Fix8.git
+    git clone https://github.com/v1bh475u/Fix8.git
     ```
 
 2. Navigate to the project directory:
