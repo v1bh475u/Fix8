@@ -33,10 +33,11 @@ Fix8 is a simple 8-bit Instruction Set Architecture (ISA) implementation, featur
 
 1. Place assembly files (`.asm`) in the `asm/` directory.
 
-2. Run the program:
+2. Go to the `build` directory and run the program:
 
     ```bash
-    ./build/Fix8
+    cd build/
+    ./Fix8
     ```
 
 3. Follow the menu to assemble and emulate programs.
