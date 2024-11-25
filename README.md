@@ -48,3 +48,4 @@ Fix8 is a simple 8-bit Instruction Set Architecture (ISA) implementation, featur
 - `asm/`: Assembly files.
 - `programs/`: Compiled machine code.
 - `docs/`: Documentation.
+- `ISA definition/`: Definition of the ISA.
